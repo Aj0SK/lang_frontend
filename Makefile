@@ -12,4 +12,4 @@ clean:
 	rm -r -f $(BUILD)
 
 language: prepare
-	$(CXX) $(CXXFLAGS) $(SRC)/example.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core` -o $(BUILD)/example
+	$(CXX) $(CXXFLAGS) -I$(SRC) $(SRC)/example.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core` -o $(BUILD)/example
