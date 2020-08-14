@@ -2,9 +2,9 @@
 // Abstract Syntax Tree (aka Parse Tree)
 //===----------------------------------------------------------------------===//
 
-#include <vector>
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace {
 

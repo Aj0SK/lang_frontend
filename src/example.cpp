@@ -1,5 +1,5 @@
 #include "lexer.cpp"
-#include "ast.cpp"
+#include "ast.h"
 #include "parser.cpp"
 
 //#include "llvm/ADT/STLExtras.h"
