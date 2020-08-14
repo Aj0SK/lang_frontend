@@ -2,9 +2,9 @@
 // Parser
 //===----------------------------------------------------------------------===//
 
-#include <vector>
 #include <map>
 #include <memory>
+#include <vector>
 
 /// CurTok/getNextToken - Provide a simple token buffer.  CurTok is the current
 /// token the parser is looking at.  getNextToken reads another token from the
@@ -17,7 +17,8 @@ static int getNextToken() { return CurTok = gettok(); }
 static std::map<char, int> BinopPrecedence;
 
 /// GetTokPrecedence - Get the precedence of the pending binary operator token.
-static int GetTokPrecedence() {
+static int GetTokPrecedence()
+{
   if (!isascii(CurTok))
     return -1;
 
@@ -29,11 +30,13 @@ static int GetTokPrecedence() {
 }
 
 /// LogError* - These are little helper functions for error handling.
-std::unique_ptr<ExprAST> LogError(const char *Str) {
+std::unique_ptr<ExprAST> LogError(const char *Str)
+{
   fprintf(stderr, "Error: %s\n", Str);
   return nullptr;
 }
-std::unique_ptr<PrototypeAST> LogErrorP(const char *Str) {
+std::unique_ptr<PrototypeAST> LogErrorP(const char *Str)
+{
   LogError(Str);
   return nullptr;
 }
@@ -41,14 +44,16 @@ std::unique_ptr<PrototypeAST> LogErrorP(const char *Str) {
 static std::unique_ptr<ExprAST> ParseExpression();
 
 /// numberexpr ::= number
-static std::unique_ptr<ExprAST> ParseNumberExpr() {
+static std::unique_ptr<ExprAST> ParseNumberExpr()
+{
   auto Result = std::make_unique<NumberExprAST>(NumVal);
   getNextToken(); // consume the number
   return std::move(Result);
 }
 
 /// parenexpr ::= '(' expression ')'
-static std::unique_ptr<ExprAST> ParseParenExpr() {
+static std::unique_ptr<ExprAST> ParseParenExpr()
+{
   getNextToken(); // eat (.
   auto V = ParseExpression();
   if (!V)
@@ -63,7 +68,8 @@ static std::unique_ptr<ExprAST> ParseParenExpr() {
 /// identifierexpr
 ///   ::= identifier
 ///   ::= identifier '(' expression* ')'
-static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
+static std::unique_ptr<ExprAST> ParseIdentifierExpr()
+{
   std::string IdName = IdentifierStr;
 
   getNextToken(); // eat identifier.
@@ -74,8 +80,10 @@ static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
   // Call.
   getNextToken(); // eat (
   std::vector<std::unique_ptr<ExprAST>> Args;
-  if (CurTok != ')') {
-    while (true) {
+  if (CurTok != ')')
+  {
+    while (true)
+    {
       if (auto Arg = ParseExpression())
         Args.push_back(std::move(Arg));
       else
@@ -100,8 +108,10 @@ static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
 ///   ::= identifierexpr
 ///   ::= numberexpr
 ///   ::= parenexpr
-static std::unique_ptr<ExprAST> ParsePrimary() {
-  switch (CurTok) {
+static std::unique_ptr<ExprAST> ParsePrimary()
+{
+  switch (CurTok)
+  {
   default:
     return LogError("unknown token when expecting an expression");
   case tok_identifier:
@@ -116,9 +126,11 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
 /// binoprhs
 ///   ::= ('+' primary)*
 static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
-                                              std::unique_ptr<ExprAST> LHS) {
+                                              std::unique_ptr<ExprAST> LHS)
+{
   // If this is a binop, find its precedence.
-  while (true) {
+  while (true)
+  {
     int TokPrec = GetTokPrecedence();
 
     // If this is a binop that binds at least as tightly as the current binop,
@@ -138,22 +150,24 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
     // If BinOp binds less tightly with RHS than the operator after RHS, let
     // the pending operator take RHS as its LHS.
     int NextPrec = GetTokPrecedence();
-    if (TokPrec < NextPrec) {
+    if (TokPrec < NextPrec)
+    {
       RHS = ParseBinOpRHS(TokPrec + 1, std::move(RHS));
       if (!RHS)
         return nullptr;
     }
 
     // Merge LHS/RHS.
-    LHS = std::make_unique<BinaryExprAST>(BinOp, std::move(LHS),
-                                           std::move(RHS));
+    LHS =
+        std::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
   }
 }
 
 /// expression
 ///   ::= primary binoprhs
 ///
-static std::unique_ptr<ExprAST> ParseExpression() {
+static std::unique_ptr<ExprAST> ParseExpression()
+{
   auto LHS = ParsePrimary();
   if (!LHS)
     return nullptr;
@@ -163,7 +177,8 @@ static std::unique_ptr<ExprAST> ParseExpression() {
 
 /// prototype
 ///   ::= id '(' id* ')'
-static std::unique_ptr<PrototypeAST> ParsePrototype() {
+static std::unique_ptr<PrototypeAST> ParsePrototype()
+{
   if (CurTok != tok_identifier)
     return LogErrorP("Expected function name in prototype");
 
@@ -186,7 +201,8 @@ static std::unique_ptr<PrototypeAST> ParsePrototype() {
 }
 
 /// definition ::= 'def' prototype expression
-static std::unique_ptr<FunctionAST> ParseDefinition() {
+static std::unique_ptr<FunctionAST> ParseDefinition()
+{
   getNextToken(); // eat def.
   auto Proto = ParsePrototype();
   if (!Proto)
@@ -198,18 +214,21 @@ static std::unique_ptr<FunctionAST> ParseDefinition() {
 }
 
 /// toplevelexpr ::= expression
-static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
-  if (auto E = ParseExpression()) {
+static std::unique_ptr<FunctionAST> ParseTopLevelExpr()
+{
+  if (auto E = ParseExpression())
+  {
     // Make an anonymous proto.
     auto Proto = std::make_unique<PrototypeAST>("__anon_expr",
-                                                 std::vector<std::string>());
+                                                std::vector<std::string>());
     return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
   }
   return nullptr;
 }
 
 /// external ::= 'extern' prototype
-static std::unique_ptr<PrototypeAST> ParseExtern() {
+static std::unique_ptr<PrototypeAST> ParseExtern()
+{
   getNextToken(); // eat extern.
   return ParsePrototype();
 }

@@ -1,5 +1,5 @@
-#include "lexer.cpp"
 #include "ast.h"
+#include "lexer.cpp"
 #include "parser.cpp"
 
 //#include "llvm/ADT/STLExtras.h"
@@ -15,39 +15,54 @@
 // Top-Level parsing
 //===----------------------------------------------------------------------===//
 
-static void HandleDefinition() {
-  if (ParseDefinition()) {
+static void HandleDefinition()
+{
+  if (ParseDefinition())
+  {
     fprintf(stderr, "Parsed a function definition.\n");
-  } else {
+  }
+  else
+  {
     // Skip token for error recovery.
     getNextToken();
   }
 }
 
-static void HandleExtern() {
-  if (ParseExtern()) {
+static void HandleExtern()
+{
+  if (ParseExtern())
+  {
     fprintf(stderr, "Parsed an extern\n");
-  } else {
+  }
+  else
+  {
     // Skip token for error recovery.
     getNextToken();
   }
 }
 
-static void HandleTopLevelExpression() {
+static void HandleTopLevelExpression()
+{
   // Evaluate a top-level expression into an anonymous function.
-  if (ParseTopLevelExpr()) {
+  if (ParseTopLevelExpr())
+  {
     fprintf(stderr, "Parsed a top-level expr\n");
-  } else {
+  }
+  else
+  {
     // Skip token for error recovery.
     getNextToken();
   }
 }
 
 /// top ::= definition | external | expression | ';'
-static void MainLoop() {
-  while (true) {
+static void MainLoop()
+{
+  while (true)
+  {
     fprintf(stderr, "ready> ");
-    switch (CurTok) {
+    switch (CurTok)
+    {
     case tok_eof:
       return;
     case ';': // ignore top-level semicolons.
@@ -70,7 +85,8 @@ static void MainLoop() {
 // Main driver code.
 //===----------------------------------------------------------------------===//
 
-int main() {
+int main()
+{
   // Install standard binary operators.
   // 1 is lowest precedence.
   BinopPrecedence['<'] = 10;

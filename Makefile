@@ -5,7 +5,10 @@ CXXFLAGS = -g -O3
 
 all: prepare language
 
-prepare:
+reformat:
+	clang-format -i -style=file $(SRC)/*.cpp
+
+prepare: reformat
 	mkdir -p $(BUILD)
 
 clean:
