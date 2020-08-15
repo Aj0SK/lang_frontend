@@ -12,9 +12,14 @@
 
 class NodeAST
 {
+protected:
+  void print_prefix(int depth) const
+  {
+    for(int i=0; i<depth; ++i) std::cout << '\t';
+  };
 public:
   virtual ~NodeAST() = default;
-  virtual void visit() const = 0;
+  virtual void visit(int depth) const = 0;
 };
 
 class ProgramAST : public NodeAST
@@ -22,12 +27,13 @@ class ProgramAST : public NodeAST
 public:
   ProgramAST() {}
   std::vector<std::unique_ptr<NodeAST>> statements;
-  void visit() const override
+  void visit(int depth) const override
   {
+    print_prefix(depth);
     std::cout << "Visited Program" << std::endl;
     for (const auto &statement : statements)
     {
-      statement->visit();
+      statement->visit(depth+1);
     }
   }
 };
@@ -36,7 +42,11 @@ public:
 class ExprAST : public NodeAST
 {
 public:
-  void visit() const override { std::cout << "Visited Expr" << std::endl; }
+  void visit(int depth) const override
+  {
+    print_prefix(depth);
+    std::cout << "Visited Expr" << std::endl;
+  }
 };
 
 /// NumberExprAST - Expression class for numeric literals like "1.0".
@@ -45,8 +55,9 @@ class NumberExprAST : public ExprAST
   double Val;
 
 public:
-  void visit() const override
+  void visit(int depth) const override
   {
+    print_prefix(depth);
     std::cout << "Visited NumberExpr" << std::endl;
   }
   NumberExprAST(double Val) : Val(Val) {}
@@ -58,7 +69,9 @@ class VariableExprAST : public ExprAST
   std::string Name;
 
 public:
-  void visit() const override { std::cout << "Visited Variable" << std::endl; }
+  void visit(int depth) const override {
+    print_prefix(depth);
+    std::cout << "Visited Variable" << std::endl; }
   VariableExprAST(const std::string &Name) : Name(Name) {}
 };
 
@@ -69,11 +82,16 @@ class BinaryExprAST : public ExprAST
   std::unique_ptr<ExprAST> LHS, RHS;
 
 public:
-  void visit() const override
+  void visit(int depth) const override
   {
+    print_prefix(depth);
     std::cout << "Visited BinaryExpr" << std::endl;
-    LHS->visit();
-    RHS->visit();
+    LHS->visit(depth+1);
+    
+    print_prefix(depth+1);
+    std::cout << Op << std::endl;
+    
+    RHS->visit(depth+1);
   }
   BinaryExprAST(char Op, std::unique_ptr<ExprAST> LHS,
                 std::unique_ptr<ExprAST> RHS)
@@ -89,12 +107,13 @@ class CallExprAST : public ExprAST
   std::vector<std::unique_ptr<ExprAST>> Args;
 
 public:
-  void visit() const override
+  void visit(int depth) const override
   {
+    print_prefix(depth);
     std::cout << "Visited CallExpr" << std::endl;
     for (const auto &arg : Args)
     {
-      arg->visit();
+      arg->visit(depth+1);
     }
   }
   CallExprAST(const std::string &Callee,
@@ -113,7 +132,11 @@ class PrototypeAST : public NodeAST
   std::vector<std::string> Args;
 
 public:
-  void visit() const override { std::cout << "Visited Prototype" << std::endl; }
+  void visit(int depth) const override {
+    print_prefix(depth);
+    std::cout << "Visited Prototype" << std::endl;
+    
+  }
   PrototypeAST(const std::string &Name, std::vector<std::string> Args)
       : Name(Name), Args(std::move(Args))
   {
@@ -129,11 +152,12 @@ class FunctionAST : public NodeAST
   std::unique_ptr<ExprAST> Body;
 
 public:
-  void visit() const override
+  void visit(int depth) const override
   {
+    print_prefix(depth);
     std::cout << "Visited Function" << std::endl;
-    Proto->visit();
-    Body->visit();
+    Proto->visit(depth+1);
+    Body->visit(depth+1);
   }
   FunctionAST(std::unique_ptr<PrototypeAST> Proto,
               std::unique_ptr<ExprAST> Body)

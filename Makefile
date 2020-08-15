@@ -1,6 +1,6 @@
 CFLAGS = -Wall -Wextra -O2 -std=c++17
 LLVMFLAGS = `llvm-config --cxxflags --ldflags --system-libs --libs core`
-CC = g++
+CC = clang++
 BUILD = build
 SRC = src
 

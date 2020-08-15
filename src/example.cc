@@ -12,7 +12,7 @@ int main()
     std::cout << "Input is " << input << std::endl;
     drv.parse_string(input);
     auto tree = std::move(drv.result);
-    tree->visit();
+    tree->visit(0);
     std::cout << "Result is " << tree.get() << std::endl;
   }
 
