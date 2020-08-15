@@ -43,10 +43,10 @@
   RPAREN  ")"
   LBRACE  "{"
   RBRACE  "}"
-  DOT     "."
   COMMA   ","
   EQUAL   "="
-  TDEF    "def"
+  DEF    "def"
+  EXTERN "extern"
 ;
 
 %token <std::string> IDENTIFIER "identifier"
@@ -95,6 +95,7 @@ function : prototype LBRACE expr RBRACE { $$ = std::make_unique<FunctionAST> (st
          ;
 
 prototype: "def" IDENTIFIER LPAREN proto_args RPAREN { $$ = std::make_unique<PrototypeAST> (std::move($2), std::move($4)); }
+         | "extern" IDENTIFIER LPAREN proto_args RPAREN { $$ = std::make_unique<PrototypeAST> (std::move($2), std::move($4)); }
          ;
 
 proto_args : /*blank*/  { }

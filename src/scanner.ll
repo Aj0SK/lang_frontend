@@ -80,7 +80,7 @@
 %}
 
 identifier  [a-zA-Z][a-zA-Z0-9]*
-double      [0-9]+\.[0-9]+
+double      [0-9]+[\.]?[0-9]
 blank       [ \t\r]
 
 %{
@@ -105,16 +105,15 @@ blank       [ \t\r]
 ")"        return yy::parser::make_RPAREN (loc);
 "{"        return yy::parser::make_LBRACE (loc);
 "}"        return yy::parser::make_RBRACE (loc);
-"."        return yy::parser::make_DOT    (loc);
 ","        return yy::parser::make_COMMA  (loc);
 "="        return yy::parser::make_EQUAL  (loc);
-"def"      return yy::parser::make_TDEF    (loc);
+"def"      return yy::parser::make_DEF    (loc);
+"extern"   return yy::parser::make_EXTERN (loc);
 
 {double}     return make_FLOATING (yytext, loc);
 {identifier} return yy::parser::make_IDENTIFIER (yytext, loc);
 .          {
-             throw yy::parser::syntax_error
-               (loc, "invalid character: " + std::string(yytext));
+             std::cout << "Unknown token!" << std::endl; return yy::parser::make_END (loc);
 }
 <<EOF>>    return yy::parser::make_END (loc);
 %%
