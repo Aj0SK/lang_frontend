@@ -22,6 +22,7 @@ std::unique_ptr<PrototypeAST> LogErrorP(const char *Str) {
   return nullptr;
 }
 
+
 Value *NumberExprAST::codegen() {
   return ConstantFP::get(TheContext, APFloat(Val));
 }

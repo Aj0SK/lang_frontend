@@ -1,0 +1,5 @@
+def foo(a, b) {a*a + 2.0*a*b + b*b}
+5.2+3.9
+foo(0.2, 0.2)
+extern cos(x)
+cos(0.0)+0.5

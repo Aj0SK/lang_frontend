@@ -26,7 +26,7 @@ using namespace llvm;
 
 static LLVMContext TheContext;
 static IRBuilder<> Builder(TheContext);
-static std::unique_ptr<Module> TheModule;
+extern std::unique_ptr<Module> TheModule;
 static std::map<std::string, Value *> NamedValues;
 
 class ExprAST;
@@ -181,6 +181,11 @@ public:
   {
     print_prefix(depth);
     std::cout << "Visited Prototype" << std::endl;
+    for (const auto &arg : Args)
+    {
+      print_prefix(depth + 1);
+      std::cout << arg << ' ' << std::endl;
+    }
   }
   PrototypeAST(const std::string &Name, std::vector<std::string> Args)
       : Name(Name), Args(std::move(Args))

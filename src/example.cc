@@ -1,27 +1,31 @@
 #include "driver.hh"
 #include <iostream>
 
-int main()
+std::unique_ptr<Module> TheModule;
+
+int main(int argc, char *argv[])
 {
-  int res = 0;
-  driver drv;
-  std::vector<std::string> inputs{"5.2\n5.3\nextern sin(x)\n"};
-
-  for (const auto &input : inputs)
+  if (argc != 2)
   {
-    std::cout << "Input is " << input << std::endl;
-
-    TheModule = std::make_unique<Module>("my cool jit", TheContext);
-
-    drv.parse_string(input);
-    auto tree = std::move(drv.result);
-    tree->visit(0);
-    tree->codegen();
-
-    std::cout << "Result is " << tree.get() << std::endl;
-
-    // TheModule->print(errs(), nullptr);
+    std::cout << "Bad number of input parameters." << std::endl;
+    std::cout << "Param is: input_file_path" << std::endl;
+    return 1;
   }
 
-  return res;
+  std::string path(argv[1]);
+  driver drv;
+
+  TheModule = std::make_unique<Module>("my cool jit", TheContext);
+  std::cout << "Input is\n" << path << std::endl;
+
+  drv.parse_file(path);
+  auto tree = std::move(drv.result);
+  tree->visit(0);
+  tree->codegen();
+
+  std::cout << "Result is " << tree.get() << std::endl;
+
+  TheModule->print(errs(), nullptr);
+
+  return 0;
 }

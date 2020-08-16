@@ -95,7 +95,7 @@ operator: PLUS { $$ = '+'; }
 definition: "def" prototype LBRACE expr RBRACE { $$ = std::make_unique<FunctionAST> (std::move($2), std::move($4)); }
           ;
 
-prototype: IDENTIFIER LPAREN proto_args RPAREN { $$ = std::make_unique<PrototypeAST> (std::move($1), std::move($3)); }
+prototype: IDENTIFIER LPAREN proto_args RPAREN { $$ = std::make_unique<PrototypeAST> (std::move($1), $3); }
          ;
 
 external: "extern" prototype { $$ = std::move($2); }
@@ -103,12 +103,12 @@ external: "extern" prototype { $$ = std::move($2); }
          
 proto_args : /*blank*/  { }
           | IDENTIFIER { $$.push_back($1); }
-          | proto_args COMMA IDENTIFIER  { $1.push_back($3); }
+          | proto_args COMMA IDENTIFIER  { $$ = std::move($1); $$.push_back($3); }
           ;
 
 call_args : /*blank*/  { }
           | expr { $$.push_back(std::move($1)); }
-          | call_args COMMA expr  { $1.push_back(std::move($3)); }
+          | call_args COMMA expr  { $$ = std::move($1); $$.push_back(std::move($3)); }
           ;
 
 %%
