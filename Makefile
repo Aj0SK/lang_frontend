@@ -1,4 +1,3 @@
-# 
 CFLAGS = -Wall -Wextra -std=c++17
 LLVMFLAGS = `llvm-config --cxxflags --ldflags --system-libs --libs --libfiles core`
 CC = clang++

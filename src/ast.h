@@ -24,10 +24,18 @@
 
 using namespace llvm;
 
-static LLVMContext TheContext;
-static IRBuilder<> Builder(TheContext);
-extern std::unique_ptr<Module> TheModule;
-static std::map<std::string, Value *> NamedValues;
+struct CodeContext
+{
+  LLVMContext TheContext;
+  IRBuilder<> Builder;
+  std::unique_ptr<Module> TheModule;
+  std::map<std::string, Value *> NamedValues;
+  
+  CodeContext() : Builder(TheContext)
+  {
+    TheModule = std::make_unique<Module>("my cool jit", TheContext);
+  }
+};
 
 class ExprAST;
 class PrototypeAST;
@@ -44,7 +52,7 @@ protected:
 public:
   virtual ~NodeAST() = default;
   virtual void visit(int depth) const = 0;
-  virtual Value *codegen() = 0;
+  virtual Value *codegen(CodeContext& cc) = 0;
 };
 
 class ProgramAST
@@ -62,11 +70,11 @@ public:
       statement->visit(depth + 1);
     }
   };
-  void codegen()
+  void codegen(CodeContext& cc)
   {
     for (const auto &statement : statements)
     {
-      if (auto *FnIR = statement->codegen())
+      if (auto *FnIR = statement->codegen(cc))
       {
         fprintf(stderr, "Read function definition:");
         FnIR->print(errs());
@@ -85,7 +93,7 @@ public:
     print_prefix(depth);
     std::cout << "Visited Expr" << std::endl;
   }
-  Value *codegen() override = 0;
+  Value *codegen(CodeContext& cc) override = 0;
 };
 
 /// NumberExprAST - Expression class for numeric literals like "1.0".
@@ -100,7 +108,7 @@ public:
     std::cout << "Visited NumberExpr" << std::endl;
   }
   NumberExprAST(double Val) : Val(Val) {}
-  Value *codegen() override;
+  Value *codegen(CodeContext& cc) override;
 };
 
 /// VariableExprAST - Expression class for referencing a variable, like "a".
@@ -115,7 +123,7 @@ public:
     std::cout << "Visited Variable" << std::endl;
   }
   VariableExprAST(const std::string &Name) : Name(Name) {}
-  Value *codegen() override;
+  Value *codegen(CodeContext& cc) override;
 };
 
 /// BinaryExprAST - Expression class for a binary operator.
@@ -141,7 +149,7 @@ public:
       : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS))
   {
   }
-  Value *codegen() override;
+  Value *codegen(CodeContext& cc) override;
 };
 
 /// CallExprAST - Expression class for function calls.
@@ -165,7 +173,7 @@ public:
       : Callee(Callee), Args(std::move(Args))
   {
   }
-  Value *codegen() override;
+  Value *codegen(CodeContext& cc) override;
 };
 
 /// PrototypeAST - This class represents the "prototype" for a function,
@@ -193,7 +201,7 @@ public:
   }
 
   const std::string &getName() const { return Name; }
-  Function *codegen() override;
+  Function *codegen(CodeContext& cc) override;
 };
 
 /// FunctionAST - This class represents a function definition itself.
@@ -215,7 +223,7 @@ public:
       : Proto(std::move(Proto)), Body(std::move(Body))
   {
   }
-  Function *codegen() override;
+  Function *codegen(CodeContext& cc) override;
 };
 
 #endif

@@ -26,48 +26,48 @@ std::unique_ptr<PrototypeAST> LogErrorP(const char *Str)
   return nullptr;
 }
 
-Value *NumberExprAST::codegen()
+Value *NumberExprAST::codegen(CodeContext& cc)
 {
-  return ConstantFP::get(TheContext, APFloat(Val));
+  return ConstantFP::get(cc.TheContext, APFloat(Val));
 }
 
-Value *VariableExprAST::codegen()
+Value *VariableExprAST::codegen(CodeContext& cc)
 {
   // Look this variable up in the function.
-  Value *V = NamedValues[Name];
+  Value *V = cc.NamedValues[Name];
   if (!V)
     return LogErrorV("Unknown variable name");
   return V;
 }
 
-Value *BinaryExprAST::codegen()
+Value *BinaryExprAST::codegen(CodeContext& cc)
 {
-  Value *L = LHS->codegen();
-  Value *R = RHS->codegen();
+  Value *L = LHS->codegen(cc);
+  Value *R = RHS->codegen(cc);
   if (!L || !R)
     return nullptr;
 
   switch (Op)
   {
   case '+':
-    return Builder.CreateFAdd(L, R, "addtmp");
+    return cc.Builder.CreateFAdd(L, R, "addtmp");
   case '-':
-    return Builder.CreateFSub(L, R, "subtmp");
+    return cc.Builder.CreateFSub(L, R, "subtmp");
   case '*':
-    return Builder.CreateFMul(L, R, "multmp");
+    return cc.Builder.CreateFMul(L, R, "multmp");
   case '<':
-    L = Builder.CreateFCmpULT(L, R, "cmptmp");
+    L = cc.Builder.CreateFCmpULT(L, R, "cmptmp");
     // Convert bool 0/1 to double 0.0 or 1.0
-    return Builder.CreateUIToFP(L, Type::getDoubleTy(TheContext), "booltmp");
+    return cc.Builder.CreateUIToFP(L, Type::getDoubleTy(cc.TheContext), "booltmp");
   default:
     return LogErrorV("invalid binary operator");
   }
 }
 
-Value *CallExprAST::codegen()
+Value *CallExprAST::codegen(CodeContext& cc)
 {
   // Look up the name in the global module table.
-  Function *CalleeF = TheModule->getFunction(Callee);
+  Function *CalleeF = cc.TheModule->getFunction(Callee);
   if (!CalleeF)
     return LogErrorV("Unknown function referenced");
 
@@ -78,23 +78,23 @@ Value *CallExprAST::codegen()
   std::vector<Value *> ArgsV;
   for (unsigned i = 0, e = Args.size(); i != e; ++i)
   {
-    ArgsV.push_back(Args[i]->codegen());
+    ArgsV.push_back(Args[i]->codegen(cc));
     if (!ArgsV.back())
       return nullptr;
   }
 
-  return Builder.CreateCall(CalleeF, ArgsV, "calltmp");
+  return cc.Builder.CreateCall(CalleeF, ArgsV, "calltmp");
 }
 
-Function *PrototypeAST::codegen()
+Function *PrototypeAST::codegen(CodeContext& cc)
 {
   // Make the function type:  double(double,double) etc.
-  std::vector<Type *> Doubles(Args.size(), Type::getDoubleTy(TheContext));
+  std::vector<Type *> Doubles(Args.size(), Type::getDoubleTy(cc.TheContext));
   FunctionType *FT =
-      FunctionType::get(Type::getDoubleTy(TheContext), Doubles, false);
+      FunctionType::get(Type::getDoubleTy(cc.TheContext), Doubles, false);
 
   Function *F =
-      Function::Create(FT, Function::ExternalLinkage, Name, TheModule.get());
+      Function::Create(FT, Function::ExternalLinkage, Name, cc.TheModule.get());
 
   // Set names for all arguments.
   unsigned Idx = 0;
@@ -104,30 +104,30 @@ Function *PrototypeAST::codegen()
   return F;
 }
 
-Function *FunctionAST::codegen()
+Function *FunctionAST::codegen(CodeContext& cc)
 {
   // First, check for an existing function from a previous 'extern' declaration.
-  Function *TheFunction = TheModule->getFunction(Proto->getName());
+  Function *TheFunction = cc.TheModule->getFunction(Proto->getName());
 
   if (!TheFunction)
-    TheFunction = Proto->codegen();
+    TheFunction = Proto->codegen(cc);
 
   if (!TheFunction)
     return nullptr;
 
   // Create a new basic block to start insertion into.
-  BasicBlock *BB = BasicBlock::Create(TheContext, "entry", TheFunction);
-  Builder.SetInsertPoint(BB);
+  BasicBlock *BB = BasicBlock::Create(cc.TheContext, "entry", TheFunction);
+  cc.Builder.SetInsertPoint(BB);
 
   // Record the function arguments in the NamedValues map.
-  NamedValues.clear();
+  cc.NamedValues.clear();
   for (auto &Arg : TheFunction->args())
-    NamedValues[std::string(Arg.getName())] = &Arg;
+    cc.NamedValues[std::string(Arg.getName())] = &Arg;
 
-  if (Value *RetVal = Body->codegen())
+  if (Value *RetVal = Body->codegen(cc))
   {
     // Finish off the function.
-    Builder.CreateRet(RetVal);
+    cc.Builder.CreateRet(RetVal);
 
     // Validate the generated code, checking for consistency.
     verifyFunction(*TheFunction);
