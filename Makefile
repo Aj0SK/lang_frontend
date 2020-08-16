@@ -8,7 +8,7 @@ SRC = src
 all: prepare demo
 
 reformat:
-	clang-format -i -style=file $(SRC)/*.cc $(SRC)/*.h
+	clang-format -i -style=file $(SRC)/*.cpp $(SRC)/*.cc $(SRC)/*.h
 
 clean:
 	rm -r -f $(BUILD) $(SRC)/generated

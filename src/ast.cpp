@@ -4,30 +4,35 @@ using namespace llvm;
 
 void print_prefix(int depth)
 {
-  for(int i=0; i<depth; ++i) std::cout << '\t';
+  for (int i = 0; i < depth; ++i)
+    std::cout << '\t';
 };
 
-Value *LogErrorV(const char *Str) {
+Value *LogErrorV(const char *Str)
+{
   LogError(Str);
   return nullptr;
 }
 
-std::unique_ptr<ExprAST> LogError(const char *Str) {
+std::unique_ptr<ExprAST> LogError(const char *Str)
+{
   fprintf(stderr, "Error: %s\n", Str);
   return nullptr;
 }
 
-std::unique_ptr<PrototypeAST> LogErrorP(const char *Str) {
+std::unique_ptr<PrototypeAST> LogErrorP(const char *Str)
+{
   LogError(Str);
   return nullptr;
 }
 
-
-Value *NumberExprAST::codegen() {
+Value *NumberExprAST::codegen()
+{
   return ConstantFP::get(TheContext, APFloat(Val));
 }
 
-Value *VariableExprAST::codegen() {
+Value *VariableExprAST::codegen()
+{
   // Look this variable up in the function.
   Value *V = NamedValues[Name];
   if (!V)
@@ -35,13 +40,15 @@ Value *VariableExprAST::codegen() {
   return V;
 }
 
-Value *BinaryExprAST::codegen() {
+Value *BinaryExprAST::codegen()
+{
   Value *L = LHS->codegen();
   Value *R = RHS->codegen();
   if (!L || !R)
     return nullptr;
 
-  switch (Op) {
+  switch (Op)
+  {
   case '+':
     return Builder.CreateFAdd(L, R, "addtmp");
   case '-':
@@ -57,7 +64,8 @@ Value *BinaryExprAST::codegen() {
   }
 }
 
-Value *CallExprAST::codegen() {
+Value *CallExprAST::codegen()
+{
   // Look up the name in the global module table.
   Function *CalleeF = TheModule->getFunction(Callee);
   if (!CalleeF)
@@ -68,7 +76,8 @@ Value *CallExprAST::codegen() {
     return LogErrorV("Incorrect # arguments passed");
 
   std::vector<Value *> ArgsV;
-  for (unsigned i = 0, e = Args.size(); i != e; ++i) {
+  for (unsigned i = 0, e = Args.size(); i != e; ++i)
+  {
     ArgsV.push_back(Args[i]->codegen());
     if (!ArgsV.back())
       return nullptr;
@@ -77,7 +86,8 @@ Value *CallExprAST::codegen() {
   return Builder.CreateCall(CalleeF, ArgsV, "calltmp");
 }
 
-Function *PrototypeAST::codegen() {
+Function *PrototypeAST::codegen()
+{
   // Make the function type:  double(double,double) etc.
   std::vector<Type *> Doubles(Args.size(), Type::getDoubleTy(TheContext));
   FunctionType *FT =
@@ -94,7 +104,8 @@ Function *PrototypeAST::codegen() {
   return F;
 }
 
-Function *FunctionAST::codegen() {
+Function *FunctionAST::codegen()
+{
   // First, check for an existing function from a previous 'extern' declaration.
   Function *TheFunction = TheModule->getFunction(Proto->getName());
 
@@ -113,7 +124,8 @@ Function *FunctionAST::codegen() {
   for (auto &Arg : TheFunction->args())
     NamedValues[std::string(Arg.getName())] = &Arg;
 
-  if (Value *RetVal = Body->codegen()) {
+  if (Value *RetVal = Body->codegen())
+  {
     // Finish off the function.
     Builder.CreateRet(RetVal);
 
