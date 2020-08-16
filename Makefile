@@ -1,6 +1,7 @@
+# -fsanitize=address
 CFLAGS = -Wall -Wextra -O2 -std=c++17
-LLVMFLAGS = `llvm-config --cxxflags --ldflags --system-libs --libs core`
-CC = clang++
+LLVMFLAGS = `llvm-config --cxxflags --ldflags --system-libs --libs --libfiles core`
+CC = g++
 BUILD = build
 SRC = src
 
@@ -16,16 +17,19 @@ prepare:
 	mkdir -p $(BUILD)
 	mkdir -p $(SRC)/generated
 
-demo: prepare example calculator
-	${CC} ${CFLAGS} $(LLVMFLAGS) -o $(BUILD)/example $(BUILD)/example.o $(BUILD)/driver.o $(BUILD)/parser.o $(BUILD)/scanner.o
+demo: prepare  ast.o example calculator
+	${CC} ${CFLAGS} -o $(BUILD)/example $(BUILD)/example.o $(BUILD)/ast.o $(BUILD)/driver.o $(BUILD)/parser.o $(BUILD)/scanner.o $(LLVMFLAGS)
+
+ast.o:
+	${CC} ${CFLAGS} -Wno-unused-result -DDG=1 -I$(SRC) -c -o $(BUILD)/ast.o $(SRC)/ast.cpp $(LLVMFLAGS)
 
 example: grammar
-	${CC} ${CFLAGS} $(LLVMFLAGS) -Wno-unused-result -DDG=1 -I$(SRC)/generated -c -o $(BUILD)/example.o $(SRC)/example.cc
+	${CC} ${CFLAGS} -Wno-unused-result -DDG=1 -I$(SRC)/generated -c -o $(BUILD)/example.o $(SRC)/example.cc $(LLVMFLAGS)
 
 calculator: prepare grammar scanner parser driver
 
 parser: grammar
-	${CC} ${CFLAGS} $(LLVMFLAGS) -Wno-unused-result -DDG=1 -I$(SRC) -I$(SRC)/generated -c -o $(BUILD)/parser.o $(SRC)/generated/parser.cc
+	${CC} ${CFLAGS} -Wno-unused-result -DDG=1 -I$(SRC) -I$(SRC)/generated -c -o $(BUILD)/parser.o $(SRC)/generated/parser.cc $(LLVMFLAGS)
 
 driver: parser
 	${CC} ${CFLAGS} $(LLVMFLAGS) -Wno-unused-result -DDG=1 -I$(SRC)/generated -c -o $(BUILD)/driver.o $(SRC)/driver.cc

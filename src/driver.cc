@@ -1,7 +1,10 @@
 #include "driver.hh"
 #include "parser.hh"
 
-driver::driver() : trace_parsing(false), trace_scanning(false) {}
+driver::driver() : trace_parsing(false), trace_scanning(false)
+{
+  result = std::make_unique<ProgramAST>();
+}
 
 int driver::parse_file(const std::string &f)
 {

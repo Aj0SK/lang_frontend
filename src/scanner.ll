@@ -80,7 +80,7 @@
 %}
 
 identifier  [a-zA-Z][a-zA-Z0-9]*
-double      [0-9]+[\.]?[0-9]
+double      [0-9]+.[0-9]+
 blank       [ \t\r]
 
 %{
