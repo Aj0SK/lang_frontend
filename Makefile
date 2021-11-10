@@ -31,11 +31,11 @@ parser: grammar
 	${CC} ${CFLAGS} -Wno-unused-result -DDG=1 -I$(SRC) -I$(SRC)/generated -c -o $(BUILD)/parser.o $(SRC)/generated/parser.cc $(LLVMFLAGS)
 
 driver: parser
-	${CC} ${CFLAGS} $(LLVMFLAGS) -Wno-unused-result -DDG=1 -I$(SRC)/generated -c -o $(BUILD)/driver.o $(SRC)/driver.cc
+	${CC} ${CFLAGS} -Wno-unused-result -DDG=1 -I$(SRC)/generated -c -o $(BUILD)/driver.o $(SRC)/driver.cc $(LLVMFLAGS)
 
 scanner:
 	flex  -o $(SRC)/generated/scanner.cc $(SRC)/scanner.ll
-	${CC} ${CFLAGS} $(LLVMFLAGS) -Wno-unused-result -DDG=1 -I$(SRC) -I$(SRC)/generated -c -o $(BUILD)/scanner.o $(SRC)/generated/scanner.cc
+	${CC} ${CFLAGS} -Wno-unused-result -DDG=1 -I$(SRC) -I$(SRC)/generated -c -o $(BUILD)/scanner.o $(SRC)/generated/scanner.cc $(LLVMFLAGS)
 
 grammar:
 	bison  --xml --graph=$(SRC)/generated/parser.gv -o $(SRC)/generated/parser.cc $(SRC)/parser.yy
